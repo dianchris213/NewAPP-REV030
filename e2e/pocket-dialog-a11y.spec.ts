@@ -25,9 +25,7 @@ test.describe("Kantong Dana dialog — accessibility", () => {
     // Focus management: focus is inside the dialog and the close control is reachable.
     await expect
       .poll(() =>
-        page.evaluate(
-          () => !!document.activeElement?.closest('[data-testid="fullscreen-modal"]'),
-        ),
+        page.evaluate(() => !!document.activeElement?.closest('[data-testid="fullscreen-modal"]')),
       )
       .toBe(true);
     await expect(page.getByTestId("fullscreen-modal-close")).toBeVisible();
