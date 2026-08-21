@@ -27,7 +27,11 @@ import {
 } from "@/lib/category-schema";
 import { isString, usePersistentState } from "@/lib/persistent-filter";
 import { filterWallets, parseStoredTypeFilter, sanitizeFilters } from "@/lib/fund-source-filter";
-import { filterCategories, sanitizeCategoryFilters } from "@/lib/category-filter";
+import {
+  countCategoriesByType,
+  filterCategories,
+  sanitizeCategoryFilters,
+} from "@/lib/category-filter";
 import { FundSourceRow } from "@/components/FundSourceRow";
 import { t } from "@/lib/i18n";
 
@@ -444,6 +448,7 @@ export function FundSourceSheet({ onClose }: { onClose: () => void }) {
   // Filters the user changed in this session are respected as-is; only values
   // restored from storage are validated against the loaded wallets.
   const [filterTouched, setFilterTouched] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const resetFilters = useCallback(() => {
     resetQuery();
@@ -1014,6 +1019,9 @@ type CategorySort = CategorySortValue;
 const CATEGORY_SORTS: CategorySort[] = ["name-asc", "name-desc", "most-used"];
 
 /** Manage user-owned transaction categories (empty by default). */
+/** Rows shown before the user filters or expands the category list. */
+const COLLAPSED_CATEGORY_ROWS = 3;
+
 export function CategorySheet({ onClose }: { onClose: () => void }) {
   const {
     language,
@@ -1051,6 +1059,7 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
   // Only filters restored from storage are validated against the loaded data;
   // filters the user changed in this session are respected as-is.
   const [filterTouched, setFilterTouched] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const filtersDirty = !!query.trim() || typeFilter !== "all";
 
@@ -1097,6 +1106,15 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
     resetTypeFilter,
     copy.filtersResetAll,
   ]);
+
+  // Per-Jenis counts (search-aware) so each option shows exactly how many rows
+  // it will reveal: Pemasukan (3) / Pengeluaran (5) / Semua Jenis (8).
+  const counts = useMemo(() => countCategoriesByType(categories, query), [categories, query]);
+
+  // Space saver: with no active filter the list stays collapsed to a short
+  // preview; picking a Jenis (or searching) reveals the full matching set.
+  const collapsed = !filtersDirty && !expanded;
+  const visibleList = collapsed ? list.slice(0, COLLAPSED_CATEGORY_ROWS) : list;
 
   const hiddenCount = categories.length - list.length;
   const filtersReady = queryRestored && typeRestored;
@@ -1289,9 +1307,9 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
               }}
               className="h-11 rounded-2xl border border-outline-variant/30 bg-surface-container px-3 text-[13px] text-on-surface outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
-              <option value="all">{copy.allTypes}</option>
-              <option value="income">{copy.income}</option>
-              <option value="expense">{copy.expense}</option>
+              <option value="all">{`${copy.allTypes} (${counts.all})`}</option>
+              <option value="income">{`${copy.income} (${counts.income})`}</option>
+              <option value="expense">{`${copy.expense} (${counts.expense})`}</option>
             </select>
           </label>
           <label className="flex flex-col gap-1">
@@ -1338,8 +1356,8 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
         ) : null}
 
         <ul className="mt-3 list-none rounded-2xl bg-surface-container px-4 py-1">
-          {list.length ? (
-            list.map((c) => {
+          {visibleList.length ? (
+            visibleList.map((c) => {
               const scope = c.walletId
                 ? (wallets.find((w) => w.id === c.walletId)?.name ?? copy.allAccounts)
                 : copy.allAccounts;
@@ -1468,6 +1486,18 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
             </li>
           )}
         </ul>
+
+        {list.length > COLLAPSED_CATEGORY_ROWS && !filtersDirty ? (
+          <button
+            type="button"
+            data-testid="category-toggle-all"
+            aria-expanded={!collapsed}
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-2 h-11 w-full rounded-2xl border border-outline-variant/30 text-[12px] font-semibold text-on-surface-variant focus-visible:ring-2 focus-visible:ring-primary/60"
+          >
+            {collapsed ? `${copy.showAllCategories} (${list.length})` : copy.collapseCategories}
+          </button>
+        ) : null}
       </div>
     </div>
   );
