@@ -1060,7 +1060,10 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
   }, [resetQuery, resetTypeFilter, copy.filtersResetAll]);
 
   const list = useMemo(() => {
-    const rows = filterWallets(categories, { query, type: typeFilter }) as Category[];
+    // Category-specific filter: normalizes stored type values (legacy
+    // "Pemasukan"/"masuk" payloads) before comparing, so filtering by Jenis
+    // always matches the rows the user can see.
+    const rows = filterCategories(categories, { query, type: typeFilter });
     return [...rows].sort((a, b) => {
       if (sort === "name-desc") return b.name.localeCompare(a.name);
       if (sort === "most-used") {
@@ -1077,7 +1080,7 @@ export function CategorySheet({ onClose }: { onClose: () => void }) {
   // value that hides data is sanitized back to "all".
   useEffect(() => {
     if (!queryRestored || !typeRestored || filterTouched) return;
-    const result = sanitizeFilters(categories, { query, type: typeFilter });
+    const result = sanitizeCategoryFilters(categories, { query, type: typeFilter });
     if (!result.changed) return;
     if (result.filters.type !== typeFilter) resetTypeFilter();
     if (result.filters.query !== query) resetQuery();

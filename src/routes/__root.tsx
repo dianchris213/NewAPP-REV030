@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -115,7 +115,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // The Telegram WebApp script writes --tg-viewport-height / -stable-height
+    // onto <html> before React hydrates. Declaring the same variables on the
+    // server and opting this element out of hydration diffing keeps SSR and
+    // client renders consistent (no hydration mismatch warning in tests).
+    <html
+      lang="en"
+      suppressHydrationWarning
+      style={
+        {
+          "--tg-viewport-height": "100vh",
+          "--tg-viewport-stable-height": "100vh",
+        } as CSSProperties
+      }
+    >
       <head>
         <HeadContent />
       </head>
