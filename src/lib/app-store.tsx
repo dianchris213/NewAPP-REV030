@@ -12,6 +12,20 @@ import { normalizeCategories, normalizeCategoryType } from "./category-filter";
 import { persistWallet, WalletApiError } from "./wallet-api";
 import { captureApiError } from "./monitoring";
 
+/**
+ * Collision-free id for a new category. `crypto.randomUUID` is used when
+ * available; the counter fallback guarantees uniqueness even when several
+ * categories are created inside the same millisecond (duplicate ids used to
+ * make one row disappear from the list because React keys collided).
+ */
+let categorySeq = 0;
+function createCategoryId(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return `c${uuid}`;
+  categorySeq += 1;
+  return `c${Date.now().toString(36)}${categorySeq.toString(36)}`;
+}
+
 /** Outcome of a fund-source create: validation, duplicate or transport failure. */
 export type WalletAddResult = { ok: true } | { ok: false; reason: "invalid" | "duplicate" | "api" };
 
