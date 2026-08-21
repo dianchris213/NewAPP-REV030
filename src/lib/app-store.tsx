@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { parseCategoryInput, parseCategoryName } from "./category-schema";
+import { normalizeCategories, normalizeCategoryType } from "./category-filter";
 import { persistWallet, WalletApiError } from "./wallet-api";
 import { captureApiError } from "./monitoring";
 
@@ -326,7 +327,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return [
         ...prev,
         {
-          id: `c${Date.now()}${Math.round(Math.random() * 1000)}`,
+          id: createCategoryId(),
           name,
           type,
           ...(walletId ? { walletId } : {}),
@@ -342,7 +343,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!cat) return 0;
       return transactions.filter(
         (tx) =>
-          tx.type === cat.type &&
+          tx.type === normalizeCategoryType(cat.type) &&
           tx.category.toLowerCase() === cat.name.toLowerCase() &&
           (!cat.walletId || tx.walletId === cat.walletId),
       ).length;
@@ -384,7 +385,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const categoriesFor = useCallback(
     (type: TxType, walletId?: string) =>
       categories.filter(
-        (c) => c.type === type && (!c.walletId || (!!walletId && c.walletId === walletId)),
+        (c) =>
+          normalizeCategoryType(c.type) === type &&
+          (!c.walletId || (!!walletId && c.walletId === walletId)),
       ),
     [categories],
   );
@@ -737,7 +740,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setWallets(dedupeWallets(parsed.wallets));
         }
         if (Array.isArray(parsed.walletActivity)) setWalletActivity(parsed.walletActivity);
-        if (Array.isArray(parsed.categories)) setCategories(parsed.categories);
+        // Legacy/hand-edited rows are normalized (canonical type, unique id)
+        // so search + type filtering can never hide a real category.
+        if (Array.isArray(parsed.categories))
+          setCategories(normalizeCategories<Category>(parsed.categories));
         if (parsed.settings?.biometricLock) setLocked(true);
       } else {
         setTransactions(seedTransactions());
