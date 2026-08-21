@@ -27,6 +27,7 @@ import {
 } from "@/lib/category-schema";
 import { isString, usePersistentState } from "@/lib/persistent-filter";
 import { filterWallets, parseStoredTypeFilter, sanitizeFilters } from "@/lib/fund-source-filter";
+import { filterCategories, sanitizeCategoryFilters } from "@/lib/category-filter";
 import { FundSourceRow } from "@/components/FundSourceRow";
 import { t } from "@/lib/i18n";
 
