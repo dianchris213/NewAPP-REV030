@@ -64,6 +64,8 @@ export type Dict = {
   sortNameDesc: string;
   sortMostUsed: string;
   noCategoryResults: string;
+  showAllCategories: string;
+  collapseCategories: string;
   fundSources: string;
   fundSourcesEmpty: string;
   addFundSource: string;
@@ -170,6 +172,8 @@ const dictionaries: Record<Language, Dict> = {
     sortNameDesc: "Nama (Z-A)",
     sortMostUsed: "Paling sering dipakai",
     noCategoryResults: "Tidak ada kategori yang cocok.",
+    showAllCategories: "Tampilkan semua",
+    collapseCategories: "Sembunyikan",
     fundSources: "Sumber Dana",
     fundSourcesEmpty: "Belum ada sumber dana. Tambahkan milik Anda sendiri.",
     addFundSource: "Tambah Sumber Dana",
@@ -276,6 +280,8 @@ const dictionaries: Record<Language, Dict> = {
     sortNameDesc: "Name (Z-A)",
     sortMostUsed: "Most used",
     noCategoryResults: "No categories match your search.",
+    showAllCategories: "Show all",
+    collapseCategories: "Collapse",
     fundSources: "Fund Sources",
     fundSourcesEmpty: "No fund sources yet. Add your own to get started.",
     addFundSource: "Add Fund Source",

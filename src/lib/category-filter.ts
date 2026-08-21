@@ -131,3 +131,24 @@ export function sanitizeCategoryFilters(
 
   return { filters: { type, query }, changed: reasons.length > 0, reasons };
 }
+
+export type CategoryTypeCounts = { all: number; income: number; expense: number };
+
+/**
+ * Count categories per canonical Jenis so the filter control can advertise how
+ * many rows each option yields (e.g. "Pengeluaran (5)"). Counts respect the
+ * active search query so the numbers always match the rendered list.
+ */
+export function countCategoriesByType(
+  categories: readonly FilterableCategory[],
+  query = "",
+): CategoryTypeCounts {
+  const counts: CategoryTypeCounts = { all: 0, income: 0, expense: 0 };
+  const q = cleanText(query).toLowerCase();
+  for (const category of categories) {
+    if (q && !cleanText(category.name).toLowerCase().includes(q)) continue;
+    counts.all += 1;
+    counts[normalizeCategoryType(category.type)] += 1;
+  }
+  return counts;
+}
