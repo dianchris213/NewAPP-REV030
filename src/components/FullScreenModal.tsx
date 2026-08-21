@@ -1,10 +1,13 @@
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 
 /**
  * Full-screen overlay that covers the bottom navbar.
- * Only the X button closes it — backdrop clicks are intentionally ignored.
+ * Backdrop clicks are intentionally ignored; the X button or Escape closes it.
+ * Focus moves into the dialog on open, Tab/Shift+Tab are trapped inside it and
+ * focus returns to the opener on close.
  */
 export function FullScreenModal({
   open,
@@ -19,6 +22,8 @@ export function FullScreenModal({
   subtitle?: string;
   children: ReactNode;
 }) {
+  const ref = useModalA11y<HTMLDivElement>(open, onClose);
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -32,6 +37,8 @@ export function FullScreenModal({
 
   return createPortal(
     <div
+      ref={ref}
+      data-testid="fullscreen-modal"
       className="fixed inset-0 z-[130] flex flex-col bg-background"
       role="dialog"
       aria-modal="true"
@@ -47,6 +54,8 @@ export function FullScreenModal({
         <button
           type="button"
           aria-label="Tutup"
+          data-testid="fullscreen-modal-close"
+          data-autofocus
           onClick={onClose}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-variant text-on-surface-variant transition-transform active:scale-95"
         >
